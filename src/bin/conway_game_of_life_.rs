@@ -55,7 +55,9 @@ impl Game {
         for cell in &self.live_cells {
             for y in cell.y - 1..cell.y + 2 {
                 for x in cell.x - 1..cell.x + 2 {
-                    if checked_cells.contains(&Cordinates::new(y, x)) {
+                    if checked_cells.contains(&Cordinates::new(y, x))
+                        || !is_valid_index(y, x, &self.board)
+                    {
                         continue;
                     }
                     checked_cells.push(Cordinates::new(y, x));
@@ -73,7 +75,6 @@ impl Game {
                 }
             }
         }
-        println!("the new live cells are {:?}", new_live_cells);
         self.board = fill_board(self.board.len(), self.board[0].len(), &new_live_cells);
         self.live_cells = new_live_cells;
     }
@@ -115,26 +116,17 @@ impl Cell {
     }
 
     fn find_neighbours(&mut self, board: &Vec<Vec<i32>>) {
-        let mut neighbours = 0;
+        self.neighbours = 0;
         for y in self.cordinates.y - 1..self.cordinates.y + 2 {
-            if y < 0 || y >= board.len() as i32 {
-                continue;
-            }
-
             for x in self.cordinates.x - 1..self.cordinates.x + 2 {
-                if x < 0 || x >= board[0].len() as i32 {
+                if (x == self.cordinates.x && y == self.cordinates.y)
+                    || !is_valid_index(y, x, board)
+                {
                     continue;
                 }
-                if x == self.cordinates.x && y == self.cordinates.y {
-                    continue;
-                }
-                neighbours += board[y as usize][x as usize]
-                //if board[y as usize][x as usize] == 1 {
-                //    neighbours += 1
-                // }
+                self.neighbours += board[y as usize][x as usize]
             }
         }
-        self.neighbours = neighbours;
     }
 }
 
@@ -176,6 +168,16 @@ fn fill_board(height: usize, width: usize, live_cells: &Vec<Cordinates>) -> Vec<
         board[cell.y as usize][cell.x as usize] = 1;
     }
     board
+}
+
+fn is_valid_index(y: i32, x: i32, board: &Vec<Vec<i32>>) -> bool {
+    if y < 0 || y >= board.len() as i32 {
+        return false;
+    }
+    if x < 0 || x >= board[0].len() as i32 {
+        return false;
+    }
+    true
 }
 
 #[cfg(test)]
