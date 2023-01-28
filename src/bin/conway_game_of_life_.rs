@@ -59,12 +59,11 @@ impl Game {
                         continue;
                     }
                     checked_cells.push(Cordinates::new(y, x));
-                    let mut new_cell;
-                    if self.live_cells.contains(&Cordinates::new(y, x)) {
-                        new_cell = Cell::new(y, x, State::Alive);
+                    let mut new_cell = if self.live_cells.contains(&Cordinates::new(y, x)) {
+                        Cell::new(y, x, State::Alive)
                     } else {
-                        new_cell = Cell::new(y, x, State::Dead);
-                    }
+                        Cell::new(y, x, State::Dead)
+                    };
                     new_cell.find_neighbours(&self.board);
                     new_cell.update_cell();
                     match new_cell.state {
@@ -93,7 +92,7 @@ pub struct Cell {
 }
 
 impl Cell {
-    fn new(x: i32, y: i32, state: State) -> Self {
+    fn new(y: i32, x: i32, state: State) -> Self {
         Self {
             cordinates: Cordinates::new(y, x),
             state,
@@ -177,4 +176,23 @@ fn fill_board(height: usize, width: usize, live_cells: &Vec<Cordinates>) -> Vec<
         board[cell.y as usize][cell.x as usize] = 1;
     }
     board
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn horizontal_to_vertical() {
+        let mut game = Game::new(4, 4, vec![]);
+        game.set_alive(1, 1);
+        game.set_alive(1, 2);
+        game.set_alive(1, 3);
+        println!("{}", game.print_board());
+        game.update_board();
+        println!("{}", game.print_board());
+        assert_eq!(1, game.board[0][2]);
+        assert_eq!(1, game.board[1][2]);
+        assert_eq!(1, game.board[2][2]);
+    }
 }

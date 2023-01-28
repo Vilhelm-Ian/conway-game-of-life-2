@@ -8,9 +8,8 @@ const COLLUMS: i32 = 20;
 const ROWS: i32 = 20;
 
 #[derive(Component)]
-enum GameState {
-    Play,
-    Pause,
+struct GameState {
+    pause: bool,
 }
 
 fn main() {
@@ -29,7 +28,7 @@ fn setup(
 ) {
     let game = conway_game_of_life_::Game::new(ROWS as usize, COLLUMS as usize, vec![]);
     commands.spawn(game);
-    commands.spawn(GameState::Pause);
+    commands.spawn(GameState { pause: true });
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
             scaling_mode: ScalingMode::None,
@@ -76,15 +75,12 @@ fn input(
     mut game_state_query: Query<&mut GameState>,
 ) {
     let mut game = game_query.single_mut();
-    let mut game_state = game_state_query.single();
+    let mut game_state = game_state_query.single_mut();
     if keyboard_input.just_pressed(KeyCode::Space) {
-        game_state = match game_state {
-            GameState::Pause => &GameState::Play,
-            GameState::Play => &GameState::Pause,
-        }
+        game_state.pause = !game_state.pause
     }
-    match game_state {
-        GameState::Pause => {
+    match game_state.pause {
+        true => {
             if buttons.just_pressed(MouseButton::Left) {
                 let mut width = 0.0;
                 let mut height = 0.0;
@@ -95,8 +91,6 @@ fn input(
                     let y_index = get_index(height, ROWS, cursor_position[1]);
                     let x_index = get_index(width, COLLUMS, cursor_position[0]);
                     game.set_alive(y_index as usize, x_index as usize);
-                    game.set_alive(y_index as usize + 1, x_index as usize + 1);
-                    game.set_alive(y_index as usize + 2, x_index as usize + 2);
                     commands.spawn(SpriteBundle {
                         sprite: Sprite {
                             color: Color::rgb(0.71, 0.40, 0.75),
@@ -114,7 +108,7 @@ fn input(
                 }
             }
         }
-        GameState::Play => game.update_board(),
+        false => game.update_board(),
     }
 }
 
